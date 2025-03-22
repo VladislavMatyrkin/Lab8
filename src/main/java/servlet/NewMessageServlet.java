@@ -15,12 +15,12 @@ public class NewMessageServlet extends ChatServlet {
     private static final long serialVersionUID = 1L;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.setCharacterEncoding("UTF-8");
-        String message = request.getParameter("message");
-        if (message != null && !"".equals(message)) {
-            ChatUser author = activeUsers.get((String) request.getSession().getAttribute("name"));
-            synchronized (messages) {
-                messages.add(new ChatMessage(message, author, Calendar.getInstance().getTimeInMillis()));
+        request.setCharacterEncoding("UTF-8");// Устанавливаем кодировку для корректной обработки ввода
+        String message = request.getParameter("message");// Получаем текст сообщения
+        if (message != null && !"".equals(message)) {// Проверяем, что сообщение не пустое
+            ChatUser author = activeUsers.get((String) request.getSession().getAttribute("name"));// Получаем автора по имени из сессии
+            synchronized (messages) {// Синхронизируем доступ к списку сообщений
+                messages.add(new ChatMessage(message, author, Calendar.getInstance().getTimeInMillis()));// Добавляем новое сообщени
             }
         }
         response.sendRedirect("/Java_Lab_9_war_exploded/message.htm");

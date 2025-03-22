@@ -5,6 +5,7 @@ public class ChatUser {
     private long lastInteractionTime;
     private String sessionId;
 
+    // Конструктор для создания пользователя
     public ChatUser(String name, long lastInteractionTime, String sessionId) {
         this.name = name;
         this.lastInteractionTime = lastInteractionTime;

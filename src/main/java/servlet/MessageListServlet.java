@@ -18,9 +18,10 @@ public class MessageListServlet extends ChatServlet {
         PrintWriter pw = response.getWriter();
         pw.println("<html><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'/><meta http-equiv='refresh' content='1'></head>");
         pw.println("<body>");
-        for (int i = messages.size() - 1; i >= 0; i--) {
+        for (int i = messages.size() - 1; i >= 0; i--) {// Сообщения выводятся в обратном порядке
             ChatMessage aMessage = messages.get(i);
-            pw.println("<div><strong>" + aMessage.getAuthor().getName() + "</strong>: " + aMessage.getMessage() + "</div>");
+            pw.println("<div><strong>" + aMessage.getAuthor().getName() + "</strong>: " + aMessage.getMessage() +
+                    " <em>(" + aMessage.getFormattedTimestamp() + ")</em></div>");
         }
         pw.println("</body></html>");
     }

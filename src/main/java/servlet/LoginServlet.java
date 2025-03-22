@@ -21,15 +21,15 @@ public class LoginServlet extends ChatServlet {
         super.init();
         String value = getServletConfig().getInitParameter("SESSION_TIMEOUT");
         if (value != null) {
-            sessionTimeout = Integer.parseInt(value);
+            sessionTimeout = Integer.parseInt(value);// Переопределение тайм-аута сессии, если задано
         }
     }
-
+    // Обработка GET-запроса (отображение страницы логина)
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String name = (String) request.getSession().getAttribute("name");
         String errorMessage = (String) request.getSession().getAttribute("error");
         String previousSessionId = null;
-
+        // Проверка на существующую сессию пользователя
         if (name == null) {
             try {
                 for (Cookie aCookie : request.getCookies()) {
@@ -41,20 +41,20 @@ public class LoginServlet extends ChatServlet {
             } catch (NullPointerException e) {
                 name = null;
             }
-            if (previousSessionId != null) {
+            if (previousSessionId != null) { // Проверяем, есть ли пользователь с таким sessionId
                 for (ChatUser aUser : activeUsers.values()) {
                     if (aUser.getSessionId().equals(previousSessionId)) {
-                        name = aUser.getName();
-                        aUser.setSessionId(request.getSession().getId());
+                        name = aUser.getName();// Если есть, восстанавливаем имя пользователя
+                        aUser.setSessionId(request.getSession().getId());// Обновляем sessionId
                     }
                 }
             }
         }
-
+        // Если имя найдено, пытаемся войти
         if (name != null && !"".equals(name)) {
             errorMessage = processLogonAttempt(name, request, response);
         }
-
+        // Отображение HTML-страницы с формой логина
         response.setCharacterEncoding("utf8");
         PrintWriter pw = response.getWriter();
         pw.println("<html><head><title>Мега-чат!</title><meta http-equiv='Content-Type' content='text/html; charset=utf-8'/></head>");
@@ -64,45 +64,49 @@ public class LoginServlet extends ChatServlet {
         pw.println("<form action='/Java_Lab_9_war_exploded/login.do' method='post'>Введите имя: <input type='text' name='name' value=''><input type='submit' value='Войти в чат'></form></body></html>");
         request.getSession().setAttribute("error", null);
     }
-
+    // Обработка POST-запроса (попытка входа)
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         String name = request.getParameter("name");
         String errorMessage = null;
+        // Проверяем, введено ли имя
         if (name == null || "".equals(name)) {
-            errorMessage = "Name cannot be empty!";
-        } else if (count >= 3) {
+            errorMessage = "Поле имя пустое,для входа в чат, введите имя!";
+        } else if (count >= 10) {
             errorMessage = "Number of users exceeded!";
         } else {
-            errorMessage = processLogonAttempt(name, request, response);
+            errorMessage = processLogonAttempt(name, request, response);// Попытка авторизации
         }
+        // Если есть ошибка, перенаправляем обратно на страницу логина
         if (errorMessage != null) {
             request.getSession().setAttribute("name", null);
             request.getSession().setAttribute("error", errorMessage);
             response.sendRedirect(response.encodeRedirectURL("/Java_Lab_9_war_exploded/login.do"));
         }
     }
-
+    // Обработка попытки входа
     String processLogonAttempt(String name, HttpServletRequest request, HttpServletResponse response) throws IOException {
         String sessionId = request.getSession().getId();
         ChatUser aUser = activeUsers.get(name);
+        // Если пользователь не существует, создаем нового
         if (aUser == null) {
             aUser = new ChatUser(name, Calendar.getInstance().getTimeInMillis(), sessionId);
             synchronized (activeUsers) {
                 activeUsers.put(aUser.getName(), aUser);
             }
         }
-        count++;
-
+        count++;// Увеличиваем счетчик активных пользователей
+// Если пользователь может войти
         if (aUser.getSessionId().equals(sessionId) || aUser.getLastInteractionTime() < (Calendar.getInstance().getTimeInMillis() - sessionTimeout * 1000)) {
             request.getSession().setAttribute("name", name);
             aUser.setLastInteractionTime(Calendar.getInstance().getTimeInMillis());
             Cookie sessionIdCookie = new Cookie("sessionId", sessionId);
-            sessionIdCookie.setMaxAge(60 * 60 * 24 * 365);
+            sessionIdCookie.setMaxAge(60 * 60 * 24 * 365);// Устанавливаем cookie на 1 год
             response.addCookie(sessionIdCookie);
             response.sendRedirect(response.encodeRedirectURL("/Java_Lab_9_war_exploded/view.htm"));
             return null;
         } else {
+            // Если имя занято
             return "Sorry, <strong>" + name + "</strong> is engaged. Please try another one!";
         }
     }
